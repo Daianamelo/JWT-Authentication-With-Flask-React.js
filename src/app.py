@@ -80,6 +80,31 @@ def get_profile():
     print(user.serialize())
     return jsonify({"msg":"ok", "user":user.serialize()}), 200
 
+@app.route("/cuenta", methods=["GET"])
+@jwt_required()
+def get_cuenta():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+
+    user = User.query.filter_by(email=current_user).first()
+    print(user.serialize())
+    response_body = {"user":user.serialize()}
+
+    return jsonify(response_body), 200 
+
+
+    @app.route("/cuenta", methods=["GET"])
+    @jwt_required()
+    def get_cuenta():
+    # Access the identity of the current user with get_jwt_identity
+        current_user = get_jwt_identity()
+
+    user = User.query.filter_by(email=current_user).first()
+    print(user.serialize())
+    response_body = {"user":user.serialize()}
+
+    return jsonify(response_body), 200 
+
 
 
 
@@ -95,6 +120,22 @@ def handle_hello():
     }
 
     return jsonify(results), 200
+
+#personajes
+@app.route('/personajes', methods=['GET'])
+def get_personajes():
+    all_personajes= Personajes.query.all()
+    results = list(map(lambda item: item.serialize(),all_personajes))
+
+    return jsonify(results), 200
+
+#solo un personaje
+@app.route('/personajes/<int:personajes_id>', methods=['GET'])
+def select_personajes(personajes_id):
+    personaje = Personajes.query.filter_by(id=personajes_id).first()
+    return jsonify(personajes_id), 200
+
+
 
 #consulta individual user
 
@@ -118,15 +159,81 @@ def get_info_user(user_id):
 #1)cambiar por el nombre que necesito y fijarme si va get o otra cosa
 @app.route('/Planetas', methods=['GET'])
 def info_planetas():
-     allplanetas=Planetas.query.all()
-     print(allplanetas)
-     results=list(map(lambda item: item.serialize(),allplanetas))
-     print(resultado)
-     response_body = {
+    allplanetas=Planetas.query.all()
+    results=list(map(lambda item: item.serialize(),allplanetas))
+    response_body = {
         "msg": "Hello, this is your GET /planet response "
-     }
-     return jsonify(planetas.serialize()), 200
-    
+    }
+    return jsonify(planetas.serialize()), 200
+
+    # solo 1
+    @app.route('/planetas/<int:planetas_id>', methods=['GET'])
+    def select_planetas(planetas_id):
+        planetas = Planetas.query.filter_by(id=planetas_id).first()
+    return jsonify(planetas_id), 200
+
+#vehiculos
+    #consulta planetas
+#1)cambiar por el nombre que necesito y fijarme si va get o otra cosa
+@app.route('/Vehiculos', methods=['GET'])
+def info_vehiculos():
+    allvehiculos=Vehiculos.query.all()
+    results=list(map(lambda item: item.serialize(),allvehiculos))
+    response_body = {
+        "msg": "Hello, this is your GET /vehiculos response "
+    }
+    return jsonify(Vehiculos.serialize()), 200
+
+    # solo 1
+    @app.route('/vehiculos/<int:vehiculos_id>', methods=['GET'])
+    def select_vehiculos(vehiculos_id):
+        vehiculos = Vehiculos.query.filter_by(id=vehiculos_id).first()
+    return jsonify(vehiculos_id), 200
+
+
+
+#los favoritos
+@app.route('/usuario/<int:usuario_id>/favoritos', methods=['POST'])
+def add_planetas_favoritos(usuario_id):
+        request_body = request.json
+        print(request_body)
+        print(request_body["planetas_id"]) 
+        new_favoritos= Favoritos(usuario_id = usuario_id,personajes_id= None, vehiculos_id= None, planetas_id= request_body['planetas_id']) 
+        favoritos= Favoritos.query.filter_by(usuario_id = usuario_id, planetas_id= request_body['planetas_id']).first()
+        print(favoritos)
+
+        if favoritos is None:
+            new_favoritos= Favoritos(usuario_id = usuario_id,personajes_id= None, vehiculos_id= None, planetas_id= request_body['planetas_id'] ) 
+            db.session.add(new_favoritos)
+            db.session. commit()
+
+            return jsonify({'msg':'se agrego favorito'}), 200
+
+        return jsonify({'msg':'se quito favortio'}), 400
+
+@app.route('/usuario/<int:usuario_id>/favoritos/personajes', methods=['POST'])
+def add_personajes_favoritos(usuario_id):
+
+    request_body = request.json
+    print(request_body)
+    print(request_body['personajes_id'])
+
+    new_favoritos_personajes = Favoritos(usuario_id = usuario_id, personajes_id = request_body['personajes_id'], vehiculos_id = None, planetas_id = None)
+
+    favoritos = Favoritos.query.filter_by(usuario_id=usuario_id, personajes_id=request_body['personajes_id']).first()
+    print(favoritos)
+
+    if favoritos is None:
+        new_favoritos_personajes = Favoritos(usuario_id = usuario_id, personajes_id = request_body['personajes_id'], vehiculos_id = None, planets_id = None)
+        db.session.add(new_favoritos_personajes)
+        db.session.commit()
+
+        return jsonify({'msg': 'favorito agregado'}), 200    
+
+    return jsonify({'msg': 'favorito existe'}), 400
+
+
+
 
 #terminan endpoints
 # this only runs if `$ python src/app.py` is executed
